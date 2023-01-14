@@ -1021,14 +1021,6 @@ fn processMotion(self: *Self, device: *wlr.InputDevice, time: u32, delta_x: f64,
             data.view.pending.box.height += @floatToInt(i32, dy);
             data.view.applyConstraints();
 
-            var output_width: i32 = undefined;
-            var output_height: i32 = undefined;
-            data.view.output.wlr_output.effectiveResolution(&output_width, &output_height);
-
-            const box = &data.view.pending.box;
-            box.width = math.min(box.width, output_width - border_width - box.x);
-            box.height = math.min(box.height, output_height - border_width - box.y);
-
             data.view.applyPending();
 
             // Keep cursor locked to the original offset from the bottom right corner

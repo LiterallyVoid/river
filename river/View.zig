@@ -432,22 +432,8 @@ pub fn getConstraints(self: Self) Constraints {
 /// Modify the pending x/y of the view by the given deltas, clamping to the
 /// bounds of the output.
 pub fn move(self: *Self, delta_x: i32, delta_y: i32) void {
-    const border_width = if (self.draw_borders) server.config.border_width else 0;
-    var output_width: i32 = undefined;
-    var output_height: i32 = undefined;
-    self.output.wlr_output.effectiveResolution(&output_width, &output_height);
-
-    const max_x = output_width - self.pending.box.width - border_width;
     self.pending.box.x += delta_x;
-    self.pending.box.x = math.max(self.pending.box.x, border_width);
-    self.pending.box.x = math.min(self.pending.box.x, max_x);
-    self.pending.box.x = math.max(self.pending.box.x, 0);
-
-    const max_y = output_height - self.pending.box.height - border_width;
     self.pending.box.y += delta_y;
-    self.pending.box.y = math.max(self.pending.box.y, border_width);
-    self.pending.box.y = math.min(self.pending.box.y, max_y);
-    self.pending.box.y = math.max(self.pending.box.y, 0);
 }
 
 /// Find and return the view corresponding to a given surface, if any
