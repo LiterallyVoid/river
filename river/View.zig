@@ -146,6 +146,13 @@ pub fn destroy(self: *Self) void {
     assert(self.surface == null);
     self.destroying = true;
 
+    var it = server.input_manager.seats.first;
+    while (it) |seat_node| : (it = seat_node.next) {
+        if (seat_node.data.last_focused_view == self) {
+            seat_node.data.last_focused_view = null;
+        }
+    }
+
     // If there are still saved buffers, then this view needs to be kept
     // around until the current transaction completes. This function will be
     // called again in Root.commitTransaction()

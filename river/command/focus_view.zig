@@ -17,6 +17,7 @@
 const std = @import("std");
 
 const server = &@import("../main.zig").server;
+const util = @import("../util.zig");
 
 const Direction = @import("../command.zig").Direction;
 const Error = @import("../command.zig").Error;
@@ -71,4 +72,14 @@ pub fn focusView(
 
 fn filter(view: *View, filter_tags: u32) bool {
     return view.surface != null and view.pending.tags & filter_tags != 0;
+}
+
+pub fn lastFocusedView(
+    seat: *Seat,
+    _: []const [:0]const u8,
+    out: *?[]const u8,
+) Error!void {
+    const view = seat.last_focused_view orelse return;
+
+    out.* = try util.gpa.dupe(u8, std.mem.span(view.getTitle() orelse ""));
 }

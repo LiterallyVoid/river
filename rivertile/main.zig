@@ -85,6 +85,8 @@ var default_main_location: Location = .left;
 var default_main_count: u31 = 1;
 var default_main_ratio: f64 = 0.6;
 
+var is_stack = false;
+
 /// We don't free resources on exit, only when output globals are removed.
 const gpa = std.heap.c_allocator;
 
@@ -145,6 +147,12 @@ const Output = struct {
                     std.log.err("not enough arguments", .{});
                     return;
                 };
+
+                if (std.mem.eql(u8, raw_cmd, "stack")) {
+                    is_stack = !is_stack;
+                    return;
+                }
+
                 const raw_arg = it.next() orelse {
                     std.log.err("not enough arguments", .{});
                     return;
@@ -197,6 +205,22 @@ const Output = struct {
 
             .layout_demand => |ev| {
                 assert(ev.view_count > 0);
+
+                if (is_stack) {
+                    var i: u31 = 0;
+                    while (i < ev.view_count) : (i += 1) {
+                        layout.pushViewDimensions(
+                            0,
+                            0,
+                            ev.usable_width,
+                            ev.usable_height,
+                            ev.serial,
+                        );
+                    }
+
+                    layout.commit("rivertile - stack", ev.serial);
+                    return;
+                }
 
                 const main_count = math.min(output.main_count, @truncate(u31, ev.view_count));
                 const secondary_count = @truncate(u31, ev.view_count) -| main_count;

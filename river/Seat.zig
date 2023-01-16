@@ -79,6 +79,7 @@ keyboard_groups: std.TailQueue(KeyboardGroup) = .{},
 focused_output: *Output,
 
 focused: FocusTarget = .none,
+last_focused_view: ?*View = null,
 
 /// Stack of views in most recently focused order
 /// If there is a currently focused view, it is on top.
@@ -247,6 +248,8 @@ pub fn setFocusRaw(self: *Self, new_focus: FocusTarget) void {
             if (target_view.pending.focus == 0) target_view.setActivated(true);
             target_view.pending.focus += 1;
             target_view.pending.urgent = false;
+
+            self.last_focused_view = target_view;
         },
         .layer => |target_layer| {
             assert(server.lock_manager.state == .unlocked);
