@@ -21,6 +21,7 @@ const mem = std.mem;
 const wlr = @import("wlroots");
 
 const server = &@import("../main.zig").server;
+const util = @import("../util.zig");
 
 const Direction = @import("../command.zig").Direction;
 const PhysicalDirectionDirection = @import("../command.zig").PhysicalDirection;
@@ -107,4 +108,75 @@ fn getOutput(seat: *Seat, str: []const u8) !?*Output {
         }
         return Error.InvalidOutputIndicator;
     }
+}
+
+pub fn listModes(
+    seat: *Seat,
+    _: []const [:0]const u8,
+    out: *?[]const u8,
+) Error!void {
+    var mode_list = std.ArrayList(u8).init(util.gpa);
+    errdefer mode_list.deinit();
+
+    var it = seat.focused_output.wlr_output.modes.iterator(.forward);
+
+    var i: i32 = 0;
+
+    while (it.next()) |mode| {
+        try mode_list.writer().print("\tmode {}: {}x{} @ {}hz{s}{s}\n", .{ i, mode.width, mode.height, mode.refresh, if (mode == seat.focused_output.wlr_output.current_mode) " (current)" else "", if (mode.preferred) " (*)" else "" });
+
+        i += 1;
+    }
+
+    out.* = mode_list.toOwnedSlice();
+}
+
+pub fn setMode(
+    seat: *Seat,
+    args: []const [:0]const u8,
+    _: *?[]const u8,
+) Error!void {
+    if (args.len < 2) return Error.NotEnoughArguments;
+    if (args.len > 2) return Error.TooManyArguments;
+
+    var sel = try std.fmt.parseInt(i32, args[1], 10);
+
+    var it = seat.focused_output.wlr_output.modes.iterator(.forward);
+
+    var i: i32 = 0;
+
+    while (it.next()) |mode| {
+        if (i == sel) {
+            const old_mode = (seat.focused_output.wlr_output.current_mode orelse return Error.InvalidValue);
+
+            seat.focused_output.wlr_output.setMode(mode);
+            seat.focused_output.wlr_output.commit() catch {
+                seat.focused_output.wlr_output.setMode(old_mode);
+                seat.focused_output.wlr_output.commit() catch unreachable;
+            };
+        }
+
+        i += 1;
+    }
+}
+
+pub fn setModeCustom(
+    seat: *Seat,
+    args: []const [:0]const u8,
+    _: *?[]const u8,
+) Error!void {
+    if (args.len < 4) return Error.NotEnoughArguments;
+    if (args.len > 4) return Error.TooManyArguments;
+
+    var w = try std.fmt.parseInt(i32, args[1], 10);
+    var h = try std.fmt.parseInt(i32, args[2], 10);
+    var r = try std.fmt.parseInt(i32, args[3], 10);
+
+    const old_mode = (seat.focused_output.wlr_output.current_mode orelse return Error.InvalidValue);
+
+    seat.focused_output.wlr_output.setCustomMode(w, h, r);
+    seat.focused_output.wlr_output.commit() catch {
+        seat.focused_output.wlr_output.setMode(old_mode);
+        seat.focused_output.wlr_output.commit() catch unreachable;
+    };
 }
