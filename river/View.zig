@@ -59,7 +59,7 @@ const State = struct {
     /// Number of seats currently focusing the view
     focus: u32 = 0,
 
-    float: bool = false,
+    float: bool = true,
     fullscreen: bool = false,
     urgent: bool = false,
 };
