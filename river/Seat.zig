@@ -342,7 +342,7 @@ pub fn handleViewMap(self: *Self, view: *View) !void {
     const new_focus_node = try util.gpa.create(ViewStack(*View).Node);
     new_focus_node.view = view;
     self.focus_stack.append(new_focus_node);
-    self.focus(view);
+    //self.focus(view);
 }
 
 /// Handle the unmapping of a view, removing it from the focus stack and
